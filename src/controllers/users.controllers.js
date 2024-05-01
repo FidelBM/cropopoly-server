@@ -2,16 +2,10 @@ import {pool} from "../database/connection.js";
 
 export const getJugadores = async (req, res) => {
     try {
-        // Consulta SQL para obtener jugadores con sus juegos
+        // Consulta SQL para obtener jugadores
         const query = `
-        SELECT 
-        j.id,
-        j.nombre,
-        j.apellido,
-        j.fechaNacimiento,
-        j.genero,
-        j.estado,
-        j.email,
+        SELECT *
+        FROM Jugadores
        `;
         
         // Ejecuta la consulta SQL utilizando el pool de conexiones

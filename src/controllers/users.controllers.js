@@ -2,7 +2,7 @@ import {pool} from "../database/connection.js";
 
 export const getJugadores = async (req, res) => {
     try {
-        // Consulta SQL para obtener solo jugadores
+        // Consulta SQL para obtener jugadores con sus juegos y parcelas
         const query = `
         SELECT 
         j.id,
@@ -11,7 +11,44 @@ export const getJugadores = async (req, res) => {
         j.fechaNacimiento,
         j.genero,
         j.estado,
-        j.email
+        j.email,
+        (
+            SELECT JSON_ARRAYAGG(
+                JSON_OBJECT(
+                    'id', jg.id,
+                    'fechaHoraInicio', jg.fechaHoraInicio,
+                    'fechaHoraFin', jg.fechaHoraFin,
+                    'tipoFinanciamiento', jg.tipoFinanciamiento,
+                    'noEstaciones', jg.noEstaciones,
+                    'noContratos', jg.noContratos,
+                    'balance', jg.balance,
+                    'qytTrabajador', jg.qytTrabajador,
+                    'qytHerramienta', jg.qytHerramienta,
+                    'qytSemilla', jg.qytSemilla,
+                    'qytAgua', jg.qytAgua,
+                    'qytFertilizante', jg.qytFertilizante,
+                    'Parcela', (
+                        SELECT JSON_ARRAYAGG(
+                            JSON_OBJECT(
+                                'id', p.id,
+                                'numeroParcela', p.numeroParcela,
+                                'qytTrabajadorPar', p.qytTrabajadorPar,
+                                'qytHerramientaPar', p.qytHerramientaPar,
+                                'qytSemillaPar', p.qytSemillaPar,
+                                'qytAguaPar', p.qytAguaPar,
+                                'qytFertilizantePar', p.qytFertilizantePar,
+                                'desbloqueada', p.desbloqueada,
+                                'productividad', p.productividad
+                            )
+                        )
+                        FROM Parcelas p
+                        WHERE p.juego_id = jg.id
+                    )
+                )
+            )
+            FROM Juegos jg
+            WHERE jg.jugador_id = j.id
+        ) AS Juego
     FROM Jugadores j;
         `;
         

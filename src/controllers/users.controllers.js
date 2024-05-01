@@ -12,46 +12,7 @@ export const getJugadores = async (req, res) => {
         j.genero,
         j.estado,
         j.email,
-        CASE
-            WHEN jg.id IS NULL THEN NULL
-            ELSE JSON_ARRAYAGG(
-                JSON_OBJECT(
-                    'id', jg.id,
-                    'fechaHoraInicio', jg.fechaHoraInicio,
-                    'fechaHoraFin', jg.fechaHoraFin,
-                    'tipoFinanciamiento', jg.tipoFinanciamiento,
-                    'noEstaciones', jg.noEstaciones,
-                    'noContratos', jg.noContratos,
-                    'balance', jg.balance,
-                    'qytTrabajador', jg.qytTrabajador,
-                    'qytHerramienta', jg.qytHerramienta,
-                    'qytSemilla', jg.qytSemilla,
-                    'qytAgua', jg.qytAgua,
-                    'qytFertilizante', jg.qytFertilizante,
-                    'Parcela', (
-                        SELECT JSON_ARRAYAGG(
-                            JSON_OBJECT(
-                                'id', p.id,
-                                'numeroParcela', p.numeroParcela,
-                                'qytTrabajadorPar', p.qytTrabajadorPar,
-                                'qytHerramientaPar', p.qytHerramientaPar,
-                                'qytSemillaPar', p.qytSemillaPar,
-                                'qytAguaPar', p.qytAguaPar,
-                                'qytFertilizantePar', p.qytFertilizantePar,
-                                'desbloqueada', p.desbloqueada,
-                                'productividad', p.productividad
-                            )
-                        )
-                        FROM Parcelas p
-                        WHERE p.juego_id = jg.id
-                    )
-                )
-            ) 
-        END AS Juego
-    FROM Jugadores j
-    LEFT JOIN Juegos jg ON jg.jugador_id = j.id
-    GROUP BY j.id, j.nombre, j.apellido, j.fechaNacimiento, j.genero, j.estado, j.email, jg.id;
-        `;
+       `;
         
         // Ejecuta la consulta SQL utilizando el pool de conexiones
         const [rows, fields] = await pool.query(query);

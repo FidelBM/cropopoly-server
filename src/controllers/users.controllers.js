@@ -1,3 +1,5 @@
+// Autor:      Fidel Bonilla
+
 import {pool} from "../database/connection.js";
 
 // Obtener los datos de los jugadores

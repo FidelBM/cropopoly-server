@@ -1,4 +1,8 @@
-// Autor:      Fidel Bonilla
+/*
+Autor:            Fidel Bonilla
+
+El código es el uso de las librerias para crear la coneccion a la base de datos
+*/
 
 // Importa Express para crear y configurar el servidor web
 import express from 'express';

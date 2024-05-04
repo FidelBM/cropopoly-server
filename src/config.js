@@ -1,3 +1,5 @@
+// Autor:      Fidel Bonilla
+
 // Puerto en el que se ejecutará el servidor, obtenido de la variable de entorno PORT o por defecto el puerto 8000
 export const port = process.env.PORT || 8000;
 

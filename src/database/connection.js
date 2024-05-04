@@ -1,3 +1,5 @@
+// Autor:      Fidel Bonilla
+
 // Importa la función createPool del paquete mysql2/promise
 import { createPool } from 'mysql2/promise';
 

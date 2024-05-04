@@ -1,5 +1,8 @@
-// Autor:      Fidel Bonilla
+/*
+Autor:            Fidel Bonilla
 
+El código es un enrutador para realizar las API´s de la base de datos
+*/
 // Importa el enrutador de Express
 import { Router } from "express";
 

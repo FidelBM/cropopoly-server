@@ -1,7 +1,3 @@
-¡Por supuesto! Aquí tienes un README.md que se centra específicamente en las instrucciones para configurar y ejecutar el servidor:
-
----
-
 # Cropopoly Server
 
 Cropopoly Server es el servidor backend para la aplicación Cropopoly, un juego de simulación agrícola en línea. Este servidor proporciona una API RESTful para gestionar usuarios, juegos, parcelas y más.

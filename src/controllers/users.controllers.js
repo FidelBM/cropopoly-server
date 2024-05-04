@@ -1,4 +1,8 @@
-// Autor:      Fidel Bonilla
+/*
+Autor:            Fidel Bonilla
+
+El código son los controladores de las rutas del la base de datos
+*/
 
 import {pool} from "../database/connection.js";
 

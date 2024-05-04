@@ -1,4 +1,8 @@
-// Autor:      Fidel Bonilla
+/*
+Autor:            Fidel Bonilla
+
+El código es para concetarse a la base de datos
+*/
 
 // Importa la función createPool del paquete mysql2/promise
 import { createPool } from 'mysql2/promise';

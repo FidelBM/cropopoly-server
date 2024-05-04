@@ -1,5 +1,7 @@
 import {pool} from "../database/connection.js";
 
+// Obtener los datos de los jugadores
+
 export const getJugadores = async (req, res) => {
     try {
         // Consulta SQL para obtener jugadores con sus juegos y parcelas
@@ -62,6 +64,8 @@ export const getJugadores = async (req, res) => {
     }
 };
 
+// Agregar a los jugadores
+
 export const postJugadores = async (req, res) => {
     const { nombre, apellido, fechaNacimiento, genero, estado, email } = req.body;
 
@@ -83,6 +87,8 @@ export const postJugadores = async (req, res) => {
         res.status(500).json({ error: 'An error occurred while processing your request.', details: JSON.stringify(err, Object.getOwnPropertyNames(err)) });
     }
 };
+
+// Obtener a un jugador
 
 export const getJugador = async (req, res) => {
     try {
@@ -120,6 +126,9 @@ export const getJugador = async (req, res) => {
         res.status(500).send(error.message);
     }
 };
+
+// Eliminar a un jugador
+
 export const deleteJugador = async (req,res) => {
     try {
         // First, get all the games associated with the player
@@ -143,6 +152,8 @@ export const deleteJugador = async (req,res) => {
         res.send(error.message);
     }
 };
+
+// Actualizar a un jugador con sus juegos y parcelas
 
 export const putJugador = async (req, res) => {
     const { nombre, apellido, fechaNacimiento, genero, estado, email, Juego } = req.body;
@@ -214,6 +225,8 @@ export const putJugador = async (req, res) => {
 };
 
 // Juegos
+
+// Crear juego
 export const crearJuego = async (req, res) => {
     try {
         const { 
@@ -257,6 +270,8 @@ export const crearJuego = async (req, res) => {
     }
 }
 
+// Obtener juego
+
 export const getJuego = async (req, res) => {
     try {
         const { id } = req.params; // Asume que el id se pasa como un parámetro de ruta
@@ -271,7 +286,9 @@ export const getJuego = async (req, res) => {
         res.send(error.message);
     }
 };
-// Result
+
+// Resultado 
+// Crear resultado del login o registro
 export const createResults = async (req, res) => {
     const { email } = req.body;
   
@@ -293,6 +310,8 @@ export const createResults = async (req, res) => {
       res.send(error.message);
     }
 };
+
+// Obtener el resultado del login
 export const getResult = async (req, res) => {
     try {
         const [rows] = await pool.query("SELECT * FROM Resultados");
@@ -303,6 +322,7 @@ export const getResult = async (req, res) => {
     }
 };
 
+// Agregar juego y parcelas de un jugador
 
   export const putUltimoJuegoYParcelas = async (req, res) => {
     
@@ -391,6 +411,9 @@ export const getResult = async (req, res) => {
     }
 };
 
+// Preguntas
+
+// Obtener las preguntas hechaes en un juego
 
 export const getPreguntas = async (req, res) => {
     try {
@@ -427,6 +450,8 @@ export const getPreguntas = async (req, res) => {
       res.send(error.message);
     }
 };
+
+// Obtener el jugador completo
 
 export const getJugadorCompleto = async (req, res) => {
     try {
@@ -477,6 +502,8 @@ export const getJugadorCompleto = async (req, res) => {
         res.status(500).send(error.message);
     }
 };
+
+// Crear una tabla
 export const createTable = async () => {
     try {
         await pool.query(`

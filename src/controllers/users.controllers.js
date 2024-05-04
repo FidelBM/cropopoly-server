@@ -1,55 +1,57 @@
-import {pool} from "../database/connection.js";
+// Importar el objeto 'pool' del archivo de conexión a la base de datos
+import { pool } from "../database/connection.js";
 
+// Función para obtener todos los jugadores con sus juegos y parcelas asociadas
 export const getJugadores = async (req, res) => {
     try {
         // Consulta SQL para obtener jugadores con sus juegos y parcelas
         const query = `
-        SELECT 
-        j.id,
-        j.nombre,
-        j.apellido,
-        j.fechaNacimiento,
-        j.genero,
-        j.estado,
-        j.email,
-        (
-            SELECT JSON_ARRAYAGG(
-                JSON_OBJECT(
-                    'id', jg.id,
-                    'fechaHoraInicio', jg.fechaHoraInicio,
-                    'fechaHoraFin', jg.fechaHoraFin,
-                    'tipoFinanciamiento', jg.tipoFinanciamiento,
-                    'noEstaciones', jg.noEstaciones,
-                    'noContratos', jg.noContratos,
-                    'balance', jg.balance,
-                    'qytTrabajador', jg.qytTrabajador,
-                    'qytHerramienta', jg.qytHerramienta,
-                    'qytSemilla', jg.qytSemilla,
-                    'qytAgua', jg.qytAgua,
-                    'qytFertilizante', jg.qytFertilizante,
-                    'Parcela', (
-                        SELECT JSON_ARRAYAGG(
-                            JSON_OBJECT(
-                                'id', p.id,
-                                'numeroParcela', p.numeroParcela,
-                                'qytTrabajadorPar', p.qytTrabajadorPar,
-                                'qytHerramientaPar', p.qytHerramientaPar,
-                                'qytSemillaPar', p.qytSemillaPar,
-                                'qytAguaPar', p.qytAguaPar,
-                                'qytFertilizantePar', p.qytFertilizantePar,
-                                'desbloqueada', p.desbloqueada,
-                                'productividad', p.productividad
+            SELECT 
+                j.id,
+                j.nombre,
+                j.apellido,
+                j.fechaNacimiento,
+                j.genero,
+                j.estado,
+                j.email,
+                (
+                    SELECT JSON_ARRAYAGG(
+                        JSON_OBJECT(
+                            'id', jg.id,
+                            'fechaHoraInicio', jg.fechaHoraInicio,
+                            'fechaHoraFin', jg.fechaHoraFin,
+                            'tipoFinanciamiento', jg.tipoFinanciamiento,
+                            'noEstaciones', jg.noEstaciones,
+                            'noContratos', jg.noContratos,
+                            'balance', jg.balance,
+                            'qytTrabajador', jg.qytTrabajador,
+                            'qytHerramienta', jg.qytHerramienta,
+                            'qytSemilla', jg.qytSemilla,
+                            'qytAgua', jg.qytAgua,
+                            'qytFertilizante', jg.qytFertilizante,
+                            'Parcela', (
+                                SELECT JSON_ARRAYAGG(
+                                    JSON_OBJECT(
+                                        'id', p.id,
+                                        'numeroParcela', p.numeroParcela,
+                                        'qytTrabajadorPar', p.qytTrabajadorPar,
+                                        'qytHerramientaPar', p.qytHerramientaPar,
+                                        'qytSemillaPar', p.qytSemillaPar,
+                                        'qytAguaPar', p.qytAguaPar,
+                                        'qytFertilizantePar', p.qytFertilizantePar,
+                                        'desbloqueada', p.desbloqueada,
+                                        'productividad', p.productividad
+                                    )
+                                )
+                                FROM Parcelas p
+                                WHERE p.juego_id = jg.id
                             )
                         )
-                        FROM Parcelas p
-                        WHERE p.juego_id = jg.id
                     )
-                )
-            )
-            FROM Juegos jg
-            WHERE jg.jugador_id = j.id
-        ) AS Juego
-    FROM Jugadores j;
+                    FROM Juegos jg
+                    WHERE jg.jugador_id = j.id
+                ) AS Juego
+            FROM Jugadores j;
         `;
         
         // Ejecuta la consulta SQL utilizando el pool de conexiones
@@ -62,6 +64,7 @@ export const getJugadores = async (req, res) => {
     }
 };
 
+// Función para crear un jugador
 export const postJugadores = async (req, res) => {
     const { nombre, apellido, fechaNacimiento, genero, estado, email } = req.body;
 
@@ -70,13 +73,16 @@ export const postJugadores = async (req, res) => {
     }
 
     try {
+        // Inserta un nuevo jugador en la base de datos
         const [result] = await pool.query(`
             INSERT INTO Jugadores (nombre, apellido, fechaNacimiento, genero, estado, email)
             VALUES (?, ?, ?, ?, ?, ?)
         `, [nombre, apellido, fechaNacimiento, genero, estado, email]);
 
-        // MySQL doesn't support returning values on INSERT. You need to make another query.
+        // Consulta el jugador recién insertado
         const [rows] = await pool.query('SELECT * FROM Jugadores WHERE id = ?', [result.insertId]);
+
+        // Envía el jugador recién insertado en formato JSON
         res.status(201).json(rows[0]);
     } catch (err) {
         console.error(err);
@@ -84,6 +90,7 @@ export const postJugadores = async (req, res) => {
     }
 };
 
+// Función para obtener un jugador por su ID
 export const getJugador = async (req, res) => {
     try {
         // Consultar datos del jugador
@@ -120,22 +127,25 @@ export const getJugador = async (req, res) => {
         res.status(500).send(error.message);
     }
 };
-export const deleteJugador = async (req,res) => {
+
+// Función para eliminar un jugador por su ID
+export const deleteJugador = async (req, res) => {
     try {
-        // First, get all the games associated with the player
+        // Obtener todos los juegos asociados al jugador
         const [juegos] = await pool.execute("SELECT id FROM Juegos WHERE jugador_id = ?", [req.params.id]);
 
-        // Then, for each game, delete the associated records in the Parcelas table
+        // Eliminar los registros asociados en la tabla Parcelas para cada juego
         for (let juego of juegos) {
             await pool.execute("DELETE FROM Parcelas WHERE juego_id = ?", [juego.id]);
         }
 
-        // After that, delete the associated records in the Juegos table
+        // Eliminar los registros asociados en la tabla Juegos para el jugador
         await pool.execute("DELETE FROM Juegos WHERE jugador_id = ?", [req.params.id]);
 
-        // Finally, delete the record in the Jugadores table
+        // Eliminar el registro del jugador en la tabla Jugadores
         const [result] = await pool.execute("DELETE FROM Jugadores WHERE id = ?", [req.params.id]);
 
+        // Verificar si se eliminó algún registro y responder con el código de estado correspondiente
         if (result.affectedRows === 0) return res.sendStatus(404);
         return res.sendStatus(204);
     } catch (error) {
@@ -144,6 +154,7 @@ export const deleteJugador = async (req,res) => {
     }
 };
 
+// Función para actualizar un jugador por su ID
 export const putJugador = async (req, res) => {
     const { nombre, apellido, fechaNacimiento, genero, estado, email, Juego } = req.body;
     const jugadorId = req.params.id;
@@ -153,6 +164,7 @@ export const putJugador = async (req, res) => {
     }
 
     try {
+        // Establecer conexión a la base de datos
         const conn = await pool.getConnection();
 
         // Iniciar transacción
@@ -213,9 +225,10 @@ export const putJugador = async (req, res) => {
     }
 };
 
-// Juegos
+// Función para crear un juego asociado a un jugador
 export const crearJuego = async (req, res) => {
     try {
+        // Obtener datos del juego del cuerpo de la solicitud
         const { 
             fechaHoraInicio = 0, 
             fechaHoraFin = 0, 
@@ -229,13 +242,14 @@ export const crearJuego = async (req, res) => {
             qytAgua = 0, 
             qytFertilizante = 0 
         } = req.body;
-        // Paso 1: Obtener el ID del jugador
+
+        // Verificar si el jugador existe
         const [jugadorExistente] = await pool.query("SELECT * FROM Jugadores WHERE id = ?", [req.params.id]);
-        
         if (jugadorExistente.length === 0) {
             return res.status(404).json({ message: "El jugador especificado no existe." });
         }
         
+        // Insertar un nuevo juego en la base de datos
         const [juegoResult] = await pool.query(`
             INSERT INTO Juegos (jugador_id, fechaHoraInicio, fechaHoraFin, tipoFinanciamiento, noEstaciones, noContratos, balance, qytTrabajador, qytHerramienta, qytSemilla, qytAgua, qytFertilizante)
             VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?);
@@ -243,7 +257,7 @@ export const crearJuego = async (req, res) => {
         
         const juegoId = juegoResult.insertId;
 
-        // Paso 3: Insertar cuatro tablas de parcelas asociadas al juego
+        // Insertar cuatro tablas de parcelas asociadas al juego
         for (let i = 1; i <= 5; i++) {
             await pool.query(`
                 INSERT INTO Parcelas (juego_id, numeroParcela, qytTrabajadorPar, qytHerramientaPar, qytSemillaPar, qytAguaPar, qytFertilizantePar, desbloqueada, productividad)
@@ -257,6 +271,7 @@ export const crearJuego = async (req, res) => {
     }
 }
 
+// Función para obtener un juego por su ID
 export const getJuego = async (req, res) => {
     try {
         const { id } = req.params; // Asume que el id se pasa como un parámetro de ruta
@@ -271,7 +286,8 @@ export const getJuego = async (req, res) => {
         res.send(error.message);
     }
 };
-// Result
+
+// Función para crear un resultado
 export const createResults = async (req, res) => {
     const { email } = req.body;
   
@@ -293,6 +309,8 @@ export const createResults = async (req, res) => {
       res.send(error.message);
     }
 };
+
+// Función para obtener todos los resultados
 export const getResult = async (req, res) => {
     try {
         const [rows] = await pool.query("SELECT * FROM Resultados");
@@ -303,22 +321,17 @@ export const getResult = async (req, res) => {
     }
 };
 
-
-  export const putUltimoJuegoYParcelas = async (req, res) => {
-    
+// Función para actualizar el último juego y parcelas asociadas
+export const putUltimoJuegoYParcelas = async (req, res) => {
     const { fechaHoraInicio, fechaHoraFin, tipoFinanciamiento, noEstaciones, noContratos, balance, qytTrabajador, qytHerramienta, qytSemilla, qytAgua, qytFertilizante } = req.body;
- 
-
-
-
+    
     try {
-
+        // Iniciar una transacción
         const transaction = pool.transaction();
-
         await transaction.begin();
-
         const juegoId = req.params.id; 
 
+        // Actualizar los datos del juego
         const juegoResult = await transaction
             .request()
             .input("id", sql.Int, juegoId)
@@ -349,9 +362,8 @@ export const getResult = async (req, res) => {
                 WHERE id = @id
             `);
 
-
+        // Actualizar las parcelas asociadas al juego
         for (const parcela of Juego.Parcela) {
-
             const parcelaResult = await transaction
                 .request()
                 .input("id", sql.Int, parcela.id)
@@ -361,138 +373,30 @@ export const getResult = async (req, res) => {
                 .input("qytSemillaPar", sql.Int, parcela.qytSemillaPar)
                 .input("qytAguaPar", sql.Int, parcela.qytAguaPar)
                 .input("qytFertilizantePar", sql.Int, parcela.qytFertilizantePar)
-                .input("desbloqueada", sql.VarChar(50), parcela.desbloqueada)
+                .input("desbloqueada", sql.Bit, parcela.desbloqueada)
                 .input("productividad", sql.Int, parcela.productividad)
                 .query(`
-                    UPDATE Parcelas
+                    UPDATE Parcelas 
                     SET numeroParcela = @numeroParcela, 
-                        qytTrabajadorPar = @qytTrabajadorPar,
-                        qytHerramientaPar = @qytHerramientaPar,
-                        qytSemillaPar = @qytSemillaPar,
-                        qytAguaPar = @qytAguaPar,
-                        qytFertilizantePar = @qytFertilizantePar,
-                        desbloqueada = @desbloqueada,
+                        qytTrabajadorPar = @qytTrabajadorPar, 
+                        qytHerramientaPar = @qytHerramientaPar, 
+                        qytSemillaPar = @qytSemillaPar, 
+                        qytAguaPar = @qytAguaPar, 
+                        qytFertilizantePar = @qytFertilizantePar, 
+                        desbloqueada = @desbloqueada, 
                         productividad = @productividad
                     WHERE id = @id
                 `);
-            if (parcelaResult.rowsAffected[0] === 0) {
-                await transaction.rollback();
-                return res.status(404).json({ msg: `Parcel with ID ${parcela.id} not found.` });
-            }
         }
 
+        // Commit de la transacción
         await transaction.commit();
 
-        res.json({
-            juegoResult
-        });
+        // Respuesta exitosa
+        res.status(200).json({ message: "Juego y parcelas actualizados exitosamente." });
     } catch (error) {
-        res.status(500).send(error.message);
+        // Rollback en caso de error
+        await transaction.rollback();
+        res.status(500).json({ message: error.message });
     }
 };
-
-
-export const getPreguntas = async (req, res) => {
-    try {
-        const [rows] = await pool.query("SELECT * FROM Preguntas");
-        res.json(rows);
-    } catch (error) {
-        res.status(500);
-        res.send(error.message);
-    }
-};
-
-  export const createPreguntas = async (req, res) => {
-    const { juego_id, pregunta, respuesta, correcta } = req.body;
-  
-    if (juego_id == null) {
-      return res.status(400).json({ msg: "Bad Request. Please fill all fields" });
-    }
-  
-    try {
-      const result = await pool.query(
-        "INSERT INTO Preguntas (juego_id, pregunta, respuesta, correcta) VALUES (?, ?, ?, ?)", 
-        [juego_id, pregunta, respuesta, correcta]
-      );
-  
-      res.json({
-        juego_id,
-        pregunta,
-        respuesta,
-        correcta,
-        id: result[0].insertId,
-      });
-    } catch (error) {
-      res.status(500);
-      res.send(error.message);
-    }
-};
-
-export const getJugadorCompleto = async (req, res) => {
-    try {
-        // Consultar datos del jugador
-        const [jugadorResult] = await pool.query("SELECT * FROM Jugadores WHERE id = ?", [req.params.id]);
-        
-        // Consultar juegos del jugador
-        const [juegosResult] = await pool.query("SELECT * FROM Juegos WHERE jugador_id = ?", [req.params.id]);
-        
-        // Datos del jugador
-        const jugador = jugadorResult[0];
-        // Juegos del jugador
-        const juegos = juegosResult;
-
-        // Iterar sobre cada juego para obtener las parcelas y preguntas asociadas
-        for (let i = 0; i < juegos.length; i++) {
-            const juegoId = juegos[i].id;
-            
-            // Consultar parcelas del juego
-            const [parcelasResult] = await pool.query("SELECT * FROM Parcelas WHERE juego_id = ?", [juegoId]);
-
-            // Asignar las parcelas al juego actual
-            juegos[i].Parcela = parcelasResult;
-
-            // Consultar preguntas del juego
-            const [preguntasResult] = await pool.query("SELECT * FROM Preguntas WHERE juego_id = ?", [juegoId]);
-
-            // Asignar las preguntas al juego actual
-            juegos[i].Preguntas = preguntasResult;
-        }
-
-        // Crear objeto de respuesta con el formato deseado
-        const respuesta = {
-            id: jugador.id,
-            nombre: jugador.nombre,
-            apellido: jugador.apellido,
-            fechaNacimiento: jugador.fechaNacimiento,
-            genero: jugador.genero,
-            estado: jugador.estado,
-            email: jugador.email,
-            Juego: juegos
-        };
-
-        console.log("Respuesta:", respuesta);
-
-        return res.json(respuesta);
-    } catch (error) {
-        res.status(500).send(error.message);
-    }
-};
-export const createTable = async () => {
-    try {
-        await pool.query(`
-            CREATE TABLE Preguntas (
-                id INT AUTO_INCREMENT PRIMARY KEY,
-                juego_id INT,
-                pregunta VARCHAR(50),
-                respuesta VARCHAR(200),
-                correcta VARCHAR(50),
-                FOREIGN KEY (juego_id) REFERENCES Juegos(id)
-            )
-        `);
-        console.log("Table Preguntas created successfully");
-    } catch (error) {
-        console.error(`Error: ${error.message}`);
-    }
-};
-
-  
